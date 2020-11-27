@@ -2,25 +2,30 @@
 
 import RPi.GPIO as GPIO
 import math
-
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(12, GPIO.OUT)
-pwm = GPIO.PWM(12, 200)
-
-mi = 20
-ma = 80
-pwm.start(mi + ((ma - mi) / 2))
-
 import time
-start = time.time()
 
-done = False
-while not done:
-	t = time.time() - start
-	time.sleep(0.5)
-	v = mi + ((ma - mi) * (0.5 + (0.5 * math.sin(t / 3))))
-	pwm.ChangeDutyCycle(v)
-	done = t > 60
+class Motor():
+	def __init__(self):
+		print("starting motor")
+		GPIO.setmode(GPIO.BCM)
+		GPIO.setup(12, GPIO.OUT)
+		self.pwm = GPIO.PWM(12, 200)
 
-pwm.stop()
-GPIO.cleanup()
+	def __del__(self):
+		self.pwm.stop()
+		GPIO.cleanup()
+		print("motor stopped")
+
+	def run(self):
+		mi = 20
+		ma = 80
+
+		self.pwm.start(mi + ((ma - mi) / 2))
+		start = time.time()
+		while True:
+			t = time.time() - start
+			time.sleep(0.01)
+			v = mi + ((ma - mi) * (0.5 + (0.5 * math.sin(t / 3))))
+			self.pwm.ChangeDutyCycle(v)
+
+Motor().run()
