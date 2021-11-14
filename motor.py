@@ -36,6 +36,8 @@ dcPerNote90 = {
 }
 
 dcPerNote = dcPerNote90
+lowerLimit = 48
+upperLimit = 52
 
 class DiscretePitchMotor():
 	@staticmethod
@@ -74,10 +76,10 @@ class DiscretePitchMotor():
 	def run(self):
 		mode = [1, 2, 2, 2, 1, 2, 1]
 		t = self.tonic
-		notes = [t] if not t < 44 else []
+		notes = [t] if not t < lowerLimit else []
 		for m in range(len(mode)):
 			n = t + mode[m]
-			if not n < 44 and not n > 52:
+			if not n < lowerLimit and not n > upperLimit:
 				notes.append(n)
 			t = n
 
