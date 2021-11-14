@@ -6,7 +6,7 @@ import time
 import sys
 from random import randint, random
 
-dcPerNote = {
+dcPerNote40 = {
 	44: 12,
 	45: 13,
 	46: 14,
@@ -17,6 +17,25 @@ dcPerNote = {
 	51: 46,
 	52: 100
 }
+
+dcPerNote90 = {
+	48: 12,
+	49: 13,
+	50: 13,
+	51: 14,
+	52: 15,
+	53: 17,
+	54: 18,
+	55: 20,
+	56: 22,
+	57: 27,
+	58: 34,
+	59: 42,
+	60: 64,
+	61: 100
+}
+
+dcPerNote = dcPerNote90
 
 class DiscretePitchMotor():
 	@staticmethod
@@ -42,6 +61,11 @@ class DiscretePitchMotor():
 		else:
 			self.pwm.ChangeFrequency(f)
 			self.pwm.ChangeDutyCycle(dc)
+			
+	def test(self, note, dc):
+		f = DiscretePitchMotor.freq(note)
+		self.start(f, dc)
+		time.sleep(6)
 
 	def stop(self):
 		if self.pwm is not None:
@@ -68,3 +92,4 @@ class DiscretePitchMotor():
 			time.sleep(t)
 
 DiscretePitchMotor(int(sys.argv[1])).run()
+#DiscretePitchMotor(99).test(int(sys.argv[1]), int(sys.argv[2]))
