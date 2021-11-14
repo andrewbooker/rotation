@@ -48,7 +48,16 @@ class DiscretePitchMotor():
 			self.pwm.stop()
 
 	def run(self):
-		notes = [self.tonic, self.tonic + 1, self.tonic + 3, self.tonic + 5]
+		mode = [1, 2, 2, 2, 1, 2, 1]
+		t = self.tonic
+		notes = [t] if not t < 44 else []
+		for m in range(len(mode)):
+			n = t + mode[m]
+			if not n < 44 and not n > 52:
+				notes.append(n)
+			t = n
+
+		print("using", notes)
 		while True:
 			note = notes[randint(0, len(notes) - 1)]
 			f = DiscretePitchMotor.freq(note)
