@@ -12,6 +12,14 @@ class Speed():
     def next(self):
         pass
 
+
+class General(Speed):
+	def next(self, anythingBetween):
+		i = anythingBetween(44, 250)
+		dc = anythingBetween(12, 100)
+		print(i, dc)
+		return (i, dc)
+
 class PitchBased(Speed):
     dcPerNote = {
         44: 12,
@@ -40,15 +48,15 @@ class PitchBased(Speed):
             t = n
         print("using", self.notes)
 
-    def next(self):
-        note = self.notes[randint(0, len(self.notes) - 1)]
+    def next(self, anythingBetween):
+        note = self.notes[anythingBetween(0, len(self.notes) - 1)]
         f = PitchBased.freq(note)
         dc = PitchBased.dcPerNote[note]
         print(note, f, dc)
         return (f, dc)
 
 
-class DiscretePitchMotor():
+class DiscreteSpeedMotor():
     def __init__(self, speedSource: Speed):
         print("starting motor")
         GPIO.setmode(GPIO.BCM)
@@ -75,9 +83,10 @@ class DiscretePitchMotor():
 
     def run(self):
         while True:
-            (f, dc) = self.speedSource.next()
+            (f, dc) = self.speedSource.next(randint)
             t = 2 + (8 * random())
             self.start(f, dc)
             time.sleep(t)
 
-DiscretePitchMotor(PitchBased(int(sys.argv[1]))).run()
+#DiscreteSpeedMotor(PitchBased(int(sys.argv[1]))).run()
+DiscreteSpeedMotor(General()).run()
