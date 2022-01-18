@@ -19,15 +19,15 @@ dcPerNote40 = {
 }
 
 dcPerNote90 = {
-	48: 12,
-	49: 13,
-	50: 13,
-	51: 14,
-	52: 15,
-	53: 17,
-	54: 18,
-	55: 20,
-	56: 22,
+	#48: 12,
+	#49: 13,
+	#50: 13,
+	#51: 14,
+	#52: 15,
+	#53: 17,
+	#54: 18,
+	#55: 20,
+	#56: 22,
 	57: 27,
 	58: 34,
 	59: 42,
@@ -36,8 +36,8 @@ dcPerNote90 = {
 }
 
 dcPerNote = dcPerNote90
-lowerLimit = 48
-upperLimit = 52
+lowerLimit = 57
+upperLimit = 61
 
 class DiscretePitchMotor():
 	@staticmethod
@@ -49,7 +49,7 @@ class DiscretePitchMotor():
 		GPIO.setmode(GPIO.BCM)
 		GPIO.setup(12, GPIO.OUT)
 		self.pwm = None
-		self.tonic = tonic
+		self.tonic = tonic - 12
 
 	def __del__(self):
 		self.stop()
@@ -74,7 +74,7 @@ class DiscretePitchMotor():
 			self.pwm.stop()
 
 	def run(self):
-		mode = [1, 2, 2, 2, 1, 2, 1]
+		mode = [2, 1, 2, 2, 1, 2, 2, 2, 1, 2, 2, 1, 2]
 		t = self.tonic
 		notes = [t] if not t < lowerLimit else []
 		for m in range(len(mode)):
@@ -94,4 +94,3 @@ class DiscretePitchMotor():
 			time.sleep(t)
 
 DiscretePitchMotor(int(sys.argv[1])).run()
-#DiscretePitchMotor(99).test(int(sys.argv[1]), int(sys.argv[2]))
