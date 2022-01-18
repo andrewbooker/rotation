@@ -4,6 +4,7 @@ import RPi.GPIO as GPIO
 import math
 import time
 import sys
+import json
 from random import randint, random
 
 
@@ -14,11 +15,19 @@ class Speed():
 
 
 class General(Speed):
-	def next(self, anythingBetween):
-		i = anythingBetween(44, 250)
-		dc = anythingBetween(12, 100)
-		print(i, dc)
-		return (i, dc)
+    def __init__(self, configFn):
+        self.minDc = 12
+        self.minF = 44
+        self.maxF = 250
+        with open(configFn, "r") as cf:
+            js = json.load(cf)
+            self.minDc = js["minDc"]
+
+    def next(self, anythingBetween):
+        i = anythingBetween(self.minF, self.maxF)
+        dc = anythingBetween(self.minDc, 100)
+        print(i, dc)
+        return (i, dc)
 
 class PitchBased(Speed):
     dcPerNote = {
@@ -89,4 +98,4 @@ class DiscreteSpeedMotor():
             time.sleep(t)
 
 #DiscreteSpeedMotor(PitchBased(int(sys.argv[1]))).run()
-DiscreteSpeedMotor(General()).run()
+DiscreteSpeedMotor(General(sys.argv[1] if len(sys.argv) > 1 else "../config.json")).run()
