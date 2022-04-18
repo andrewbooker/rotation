@@ -52,6 +52,7 @@ class Servo(Device):
         self.set(MIN)
 
 
+
 servo = Servo()
 
 PORT = 9977
@@ -86,12 +87,12 @@ def startServer():
     HTTPServer(("0.0.0.0", PORT), Controller).serve_forever()
 
 
+threads = []
+threads.append(threading.Thread(target=startServer, args=(), daemon=True))
+threads.append(threading.Thread(target=servo.run, args=(), daemon=True))
 
-server = threading.Thread(target=startServer, args=(), daemon=False)
-server.start()
+[t.start() for t in threads]
 print("serving on port", PORT)
-servo.run()
 
-
-server.join()
+[t.join() for t in threads]
 del servo
