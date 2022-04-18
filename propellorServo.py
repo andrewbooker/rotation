@@ -52,39 +52,56 @@ import time
 import threading
 
 class Servo(Device):
-    MIN = 1.8
+    MIN = 2.3
+    MID = 5.6
     MAX = 9.8
 
     def __init__(self):
         Device.__init__(self, "servo", 2)
-        self.aheadOnly = threading.Event()
+        self.manual = threading.Event()
+        self.isReady = threading.Event()
+        self.isReady.set()
 
     def run(self):
-        while not self.aheadOnly.is_set():
+        while not self.manual.is_set() and self.isReady.is_set():
             time.sleep(5)
             self.set(anythingBetween(Servo.MIN, Servo.MAX))
 
-        self.set(Servo.MIN)
+        self.set(Servo.MID)
+        time.sleep(1)
+        self.isReady.set()
+
+    def toManual(self):
+        if self.manual.is_set() and self.isReady.is_set():
+            return
+        self.isReady.clear()
+        self.manual.set()
+        while not self.isReady.is_set():
+            time.sleep(0.1)
 
 class Propellor(Device):
     MIN = 2.3
+    MID = 5
     MAX = 10
     PIN_DIR = 3
     PIN_SPEED = 4
 
     def __init__(self):
         Device.__init__(self, "propellor", Propellor.PIN_SPEED)
-        self.full = threading.Event()
+        self.isReversing = False
+        self.manual = threading.Event()
         ports.newOutput(Propellor.PIN_DIR)
         GPIO.output(Propellor.PIN_DIR, 1)
 
     def run(self):
-        while not self.full.is_set():
+        while not self.manual.is_set():
             sp = anythingBetween(Propellor.MIN, Propellor.MAX)
             time.sleep(1.0 + Propellor.MAX - sp)
             self.set(sp)
 
-        self.set(Propellor.MAX)
+        self.set(Propellor.MID)
+        time.sleep(1)
+
 
 servo = Servo()
 propellor = Propellor()
@@ -94,27 +111,49 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 
 class Controller(BaseHTTPRequestHandler):
-    def _standardResponse(self):
+    def __standardResponse(self):
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Access-Control-Allow-Origin", "null")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
 
     def do_OPTIONS(self):
-        self._standardResponse()
+        self.__standardResponse()
         self.send_header("Access-Control-Allow-Methods", "GET, POST")
         self.end_headers()
 
     def do_GET(self):
-        self._standardResponse()
+        self.__standardResponse()
         self.end_headers()
-        payload = {"pos": servo.value}
+        payload = {
+            "pos": servo.value,
+            "speed": propellor.value
+        }
         self.wfile.write(json.dumps(payload).encode("utf-8"))
 
+    def _stop(self):
+        servo.toManual()
+        servo.set(Servo.MID)
+
+    def _left(self):
+        servo.toManual()
+        servo.set(Servo.MAX)
+
+    def _right(self):
+        servo.toManual()
+        servo.set(Servo.MIN)
+
+    def _ahead(self):
+        servo.toManual()
+        servo.set(Servo.MID)
+        propellor.manual.set()
+
     def do_POST(self):
-        self._standardResponse()
+        self.__standardResponse()
         self.end_headers()
-        servo.aheadOnly.set()
+        self.wfile.write(json.dumps({}).encode("utf-8"))
+
+        getattr(self, "_%s" % self.path[1:])()
 
 
 def startServer():
