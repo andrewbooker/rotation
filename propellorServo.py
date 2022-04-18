@@ -24,6 +24,9 @@ class Ports():
         self.ports.append(p)
         return p
 
+    def newOutput(self, channel):
+        GPIO.setup(channel, GPIO.OUT, initial=0)
+
 ports = Ports()
 
 def anythingBetween(mi, ma):
@@ -63,8 +66,28 @@ class Servo(Device):
 
         self.set(Servo.MIN)
 
+class Propellor(Device):
+    MIN = 2.3
+    MAX = 10
+    PIN_DIR = 3
+    PIN_SPEED = 4
+
+    def __init__(self):
+        Device.__init__(self, "propellor", Propellor.PIN_SPEED)
+        self.full = threading.Event()
+        ports.newOutput(Propellor.PIN_DIR)
+        GPIO.output(Propellor.PIN_DIR, 1)
+
+    def run(self):
+        while not self.full.is_set():
+            sp = anythingBetween(Propellor.MIN, Propellor.MAX)
+            time.sleep(1.0 + Propellor.MAX - sp)
+            self.set(sp)
+
+        self.set(Propellor.MAX)
 
 servo = Servo()
+propellor = Propellor()
 
 PORT = 9977
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -100,6 +123,7 @@ def startServer():
 
 threads = []
 threads.append(threading.Thread(target=startServer, args=(), daemon=True))
+threads.append(threading.Thread(target=propellor.run, args=(), daemon=True))
 threads.append(threading.Thread(target=servo.run, args=(), daemon=True))
 
 [t.start() for t in threads]
