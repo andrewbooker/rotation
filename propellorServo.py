@@ -3,12 +3,28 @@
 import RPi.GPIO as GPIO
 import random
 
-
 FREQ_HZ = 50
-MIN = 1.8
-MAX = 9.8
 
-GPIO.setmode(GPIO.BCM)
+
+
+class Ports():
+    def __init__(self):
+        print("initialising GPIO")
+        GPIO.setmode(GPIO.BCM)
+        self.ports = []
+
+    def __del__(self):
+        print("cleaning up GPIO ports")
+        [p.stop() for p in self.ports]
+        GPIO.cleanup()
+
+    def newPwm(self, channel, freq):
+        GPIO.setup(channel, GPIO.OUT)
+        p = GPIO.PWM(channel, FREQ_HZ)
+        self.ports.append(p)
+        return p
+
+ports = Ports()
 
 def anythingBetween(mi, ma):
     return mi + ((ma - mi) * random.random())
@@ -17,14 +33,11 @@ class Device():
     def __init__(self, description, channel):
         self.desc = description
         print("starting", self.desc)
-        GPIO.setup(channel, GPIO.OUT)
-        self.pwm = GPIO.PWM(channel, FREQ_HZ)
+        self.pwm = ports.newPwm(channel, FREQ_HZ)
         self.pwm.start(0)
         self.value = 0
 
     def __del__(self):
-        self.stop()
-        GPIO.cleanup()
         print(self.desc, "stopped")
 
     def set(self, dc):
@@ -32,14 +45,13 @@ class Device():
         print(self.desc, "%0.2f" % dc)
         self.pwm.ChangeDutyCycle(dc)
 
-    def stop(self):
-        if self.pwm is not None:
-            self.pwm.stop()
-
 import time
 import threading
 
 class Servo(Device):
+    MIN = 1.8
+    MAX = 9.8
+
     def __init__(self):
         Device.__init__(self, "servo", 2)
         self.aheadOnly = threading.Event()
@@ -47,10 +59,9 @@ class Servo(Device):
     def run(self):
         while not self.aheadOnly.is_set():
             time.sleep(5)
-            self.set(anythingBetween(MIN, MAX))
+            self.set(anythingBetween(Servo.MIN, Servo.MAX))
 
-        self.set(MIN)
-
+        self.set(Servo.MIN)
 
 
 servo = Servo()
@@ -95,4 +106,4 @@ threads.append(threading.Thread(target=servo.run, args=(), daemon=True))
 print("serving on port", PORT)
 
 [t.join() for t in threads]
-del servo
+del ports
