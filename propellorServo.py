@@ -36,8 +36,23 @@ class Device():
         if self.pwm is not None:
             self.pwm.stop()
 
+import time
+import threading
 
-servo = Device("servo", 2)
+class Servo(Device):
+    def __init__(self):
+        Device.__init__(self, "servo", 2)
+        self.aheadOnly = threading.Event()
+
+    def run(self):
+        while not self.aheadOnly.is_set():
+            time.sleep(5)
+            self.set(anythingBetween(MIN, MAX))
+
+        self.set(MIN)
+
+
+servo = Servo()
 
 PORT = 9977
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -64,23 +79,19 @@ class Controller(BaseHTTPRequestHandler):
     def do_POST(self):
         self._standardResponse()
         self.end_headers()
+        servo.aheadOnly.set()
 
 
 def startServer():
     HTTPServer(("0.0.0.0", PORT), Controller).serve_forever()
 
-import time
-import threading
 
 
 server = threading.Thread(target=startServer, args=(), daemon=False)
 server.start()
 print("serving on port", PORT)
+servo.run()
 
 
-while True:
-    time.sleep(5)
-    servo.set(anythingBetween(MIN, MAX))
-
-del servo
 server.join()
+del servo
