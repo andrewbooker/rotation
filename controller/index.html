@@ -1,0 +1,57 @@
+<html>
+<head>
+<style>
+body, button {
+    font-size: 200%;
+}
+button {
+    border-radius: 20px;
+    padding: 20px;
+    margin: 20px;
+}
+.indicator {
+    height: 30px;
+}
+</style>
+</head>
+<body>
+<div>Speed: <span class="indicator" id="indicator-speed">0</span></div>
+<div>Direction: <span class="indicator" id="indicator-direction">0</span></div>
+<div><button id="button-random">Random</button></div>
+<div><button id="button-ahead">Ahead</button></div>
+<div><button id="button-left">Left</button> <button id="button-right">Right</button></div>
+<div><button id="button-stop">Stop</button></div>
+<div><button id="button-reverse">Reverse</button></div>
+<script>
+
+const g_server = "http://192.168.1.12/"
+
+function setStats(s) {
+    document.getElementById("indicator-speed").innerHTML = s.speed;
+    document.getElementById("indicator-speed").innerHTML = s.pos;
+}
+
+function getStats() {
+    const get = new XMLHttpRequest();
+    get.responseType = "json";
+    get.open("GET", this.url, true);
+    get.onload  = function() {
+        setStats(get.response)
+    };
+    get.send();
+}
+
+function postCommand(cmd) {
+    const post = new XMLHttpRequest();
+    post.responseType = "json";
+    post.open("POST", g_server + cmd, true);
+    post.send();
+}
+
+
+["random", "ahead", "left", "right", "stop", "reverse"].map(c => {
+    document.getElementById("button-" + c).setAttribute("onclick", "postCommand(" + c + ");");
+});
+</script>
+</body>
+</html>
