@@ -57,15 +57,11 @@ class RandomValueProvider():
         self.val = min + ((max - min) / 2.0)
         self.start = 0
         self.__resetTime()
-        self.enabled = True
 
     def __resetTime(self):
         self.start = time.time() + self.interval
 
     def get(self):
-        if not self.enabled:
-            return 0
-
         if time.time() > self.start:
             self.val = anythingBetween(self.min, self.max)
             self.__resetTime()
@@ -129,7 +125,6 @@ class Propellor(Device):
 
     def stop(self):
         self.manual.set()
-        self.valueProvider.enabled = False
         self.set(0)
 
     def toggleDirection(self):
