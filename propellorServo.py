@@ -113,7 +113,7 @@ class Propellor(Device):
         self.isReversing = False
         self.manual = threading.Event()
         ports.newOutput(Propellor.PIN_DIR)
-        GPIO.output(Propellor.PIN_DIR, 1)
+        GPIO.output(Propellor.PIN_DIR, 0)
         self.valueProvider = RandomValueProvider(Propellor.MIN, Propellor.MAX, 2.37)
 
     def run(self):
@@ -133,9 +133,15 @@ class Propellor(Device):
         self.stop()
         time.sleep(0.5)
         self.isReversing = not self.isReversing
-        GPIO.output(Propellor.PIN_DIR, 0 if self.isReversing else 1)
+        GPIO.output(Propellor.PIN_DIR, 1 if self.isReversing else 0)
         time.sleep(0.5)
         self.set(Propellor.MID)
+
+    def ahead(self):
+        propellor.manual.set()
+        if self.isReversing:
+            self.toggleDirection()
+        propellor.set(Propellor.MID)
 
     def toggleForwardReverse(self):
         servo.toManual()
@@ -191,8 +197,11 @@ class Controller(BaseHTTPRequestHandler):
     def _ahead(self):
         servo.toManual()
         servo.set(Servo.MID)
-        propellor.manual.set()
-        propellor.set(Propellor.MID)
+        propellor.ahead()
+
+    def _toggleForwardReverse(self):
+        self._ahead()
+        propellor.toggleForwardReverse()
 
     def do_POST(self):
         self.__standardResponse()
