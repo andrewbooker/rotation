@@ -49,6 +49,29 @@ class Device():
         self.pwm.ChangeDutyCycle(dc)
 
 import time
+class RandomValueProvider():
+    def __init__(self, min, max, interval):
+        self.min = min
+        self.max = max
+        self.interval = interval
+        self.val = min + ((max - min) / 2.0)
+        self.start = 0
+        self.__resetTime()
+        self.enabled = True
+
+    def __resetTime(self):
+        self.start = time.time() + self.interval
+
+    def get(self):
+        if not self.enabled:
+            return 0
+
+        if time.time() > self.start:
+            self.val = anythingBetween(self.min, self.max)
+            self.__resetTime()
+        return self.val
+
+
 import threading
 
 class Servo(Device):
@@ -61,11 +84,14 @@ class Servo(Device):
         self.manual = threading.Event()
         self.isReady = threading.Event()
         self.isReady.set()
+        self.valueProvider = RandomValueProvider(Servo.MIN, Servo.MAX, 5.13)
 
     def run(self):
         while not self.manual.is_set() and self.isReady.is_set():
-            time.sleep(5)
-            self.set(anythingBetween(Servo.MIN, Servo.MAX))
+            time.sleep(0.05)
+            v = self.valueProvider.get()
+            if v != self.value:
+                self.set(v)
 
         self.set(Servo.MID)
         time.sleep(1)
@@ -82,7 +108,7 @@ class Servo(Device):
 class Propellor(Device):
     MIN = 2.3
     MID = 5
-    MAX = 10
+    MAX = 8
     PIN_DIR = 3
     PIN_SPEED = 4
 
@@ -92,17 +118,18 @@ class Propellor(Device):
         self.manual = threading.Event()
         ports.newOutput(Propellor.PIN_DIR)
         GPIO.output(Propellor.PIN_DIR, 1)
+        self.valueProvider = RandomValueProvider(Propellor.MIN, Propellor.MAX, 2.37)
 
     def run(self):
         while not self.manual.is_set():
-            sp = anythingBetween(Propellor.MIN, Propellor.MAX)
-            time.sleep(1.0 + Propellor.MAX - sp)
-            self.set(sp)
-
-        self.set(Propellor.MID)
-        time.sleep(1)
+            time.sleep(0.05)
+            v = self.valueProvider.get()
+            if v != self.value:
+                self.set(v)
 
     def stop(self):
+        self.manual.set()
+        self.valueProvider.enabled = False
         self.set(0)
 
     def toggleDirection(self):
@@ -154,21 +181,23 @@ class Controller(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(payload).encode("utf-8"))
 
     def _stop(self):
+        propellor.stop()
         servo.toManual()
         servo.set(Servo.MID)
 
     def _left(self):
         servo.toManual()
-        servo.set(Servo.MAX)
+        servo.set(Servo.MIN)
 
     def _right(self):
         servo.toManual()
-        servo.set(Servo.MIN)
+        servo.set(Servo.MAX)
 
     def _ahead(self):
         servo.toManual()
         servo.set(Servo.MID)
         propellor.manual.set()
+        propellor.set(Propellor.MID)
 
     def do_POST(self):
         self.__standardResponse()
