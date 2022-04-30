@@ -84,10 +84,10 @@ class Servo(Device):
 
     def run(self):
         while not self.manual.is_set() and self.isReady.is_set():
-            time.sleep(0.05)
             v = self.valueProvider.get()
             if v != self.value:
                 self.set(v)
+            time.sleep(0.05)
 
         self.set(Servo.MID)
         time.sleep(1)
@@ -118,10 +118,10 @@ class Propellor(Device):
 
     def run(self):
         while not self.manual.is_set():
-            time.sleep(0.05)
             v = self.valueProvider.get()
             if v != self.value:
                 self.set(v)
+            time.sleep(0.05)
 
     def stop(self):
         self.manual.set()
