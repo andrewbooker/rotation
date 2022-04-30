@@ -102,6 +102,22 @@ class Propellor(Device):
         self.set(Propellor.MID)
         time.sleep(1)
 
+    def stop(self):
+        self.set(0)
+
+    def toggleDirection(self):
+        if not self.manual.is_set():
+            return
+        self.stop()
+        time.sleep(0.5)
+        self.isReversing = not self.isReversing
+        GPIO.output(Propellor.PIN_DIR, 0 if self.isReversing else 1)
+        time.sleep(0.5)
+        self.set(Propellor.MID)
+
+    def toggleForwardReverse(self):
+        servo.toManual()
+        propellor.toggleDirection()
 
 servo = Servo()
 propellor = Propellor()
