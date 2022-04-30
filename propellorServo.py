@@ -119,6 +119,12 @@ class Propellor(Device):
         servo.toManual()
         propellor.toggleDirection()
 
+import sys
+def confVal(val):
+    with open(sys.argv[1], "r") as cf:
+        js = json.load(cf)
+        return js[val]
+
 servo = Servo()
 propellor = Propellor()
 
@@ -179,7 +185,8 @@ def startServer():
 threads = []
 threads.append(threading.Thread(target=startServer, args=(), daemon=True))
 threads.append(threading.Thread(target=propellor.run, args=(), daemon=True))
-threads.append(threading.Thread(target=servo.run, args=(), daemon=True))
+if int(confVal("runServo")) == 1:
+    threads.append(threading.Thread(target=servo.run, args=(), daemon=True))
 
 [t.start() for t in threads]
 print("serving on port", PORT)
