@@ -25,8 +25,9 @@ button {
 </style>
 </head>
 <body>
-	<div>Speed: <span class="indicator" id="indicator-speed">0</span></div>
-	<div>Direction: <span class="indicator" id="indicator-direction">0</span></div>
+	<div>Speed: <span class="indicator" id="indicator-speed"></span></div>
+	<div>Orientation: <span class="indicator" id="indicator-orientation"></span></div>
+	<div>Direction: <span class="indicator" id="indicator-direction"></span></div>
 	<div class="buttons">
 		<div><button id="button-random">Random</button></div>
 		<div><button id="button-ahead">Ahead</button></div>
@@ -35,21 +36,23 @@ button {
 			<button id="button-right">Right</button>
 		</div>
 		<div><button id="button-stop">Stop</button></div>
-		<div><button id="button-reverse">Reverse</button></div>
+		<div><button id="button-toggleForwardReverse"></button></div>
 	</div>
 <script>
 
-const g_server = "http://192.168.1.12/"
+const g_server = "http://192.168.1.204:9977/"
 
 function setStats(s) {
-    document.getElementById("indicator-speed").innerHTML = s.speed;
-    document.getElementById("indicator-speed").innerHTML = s.pos;
+    document.getElementById("indicator-speed").innerHTML = new Number(s.speed).toFixed(2);
+    document.getElementById("indicator-orientation").innerHTML = new Number(s.pos).toFixed(2);
+    document.getElementById("indicator-direction").innerHTML = s.isForward ? "Forward" : "Reverse";
+    document.getElementById("button-toggleForwardReverse").innerHTML = s.isForward ? "Reverse" : "Forward";
 }
 
 function getStats() {
     const get = new XMLHttpRequest();
     get.responseType = "json";
-    get.open("GET", this.url, true);
+    get.open("GET", g_server, true);
     get.onload  = function() {
         setStats(get.response)
     };
@@ -64,9 +67,11 @@ function postCommand(cmd) {
 }
 
 
-["random", "ahead", "left", "right", "stop", "reverse"].map(c => {
-    document.getElementById("button-" + c).setAttribute("onclick", "postCommand(" + c + ");");
+["random", "ahead", "left", "right", "stop", "toggleForwardReverse"].map(c => {
+    document.getElementById("button-" + c).setAttribute("onclick", "postCommand(\"" + c + "\");");
 });
+
+setInterval(getStats, 600)
 </script>
 </body>
 </html>
