@@ -39,8 +39,16 @@ button {
 		<div><button id="button-toggleForwardReverse"></button></div>
 	</div>
 <script>
+const urlParams = window.location.search.substring(1).split("&")
+const params = {}
+urlParams.forEach(p => {
+	const ps = p.split("=")
+	if (ps.length === 2) {
+		params[ps[0]] = ps[1]
+	}
+})
 
-const g_server = "http://192.168.1.204:9977/"
+const g_server = "http://" + params["server"] + ":9977/"
 
 function setStats(s) {
     document.getElementById("indicator-speed").innerHTML = new Number(s.speed).toFixed(2);
