@@ -177,7 +177,8 @@ class Controller(BaseHTTPRequestHandler):
         self.end_headers()
         payload = {
             "pos": servo.value,
-            "speed": propellor.value
+            "speed": propellor.value,
+            "isForward": not propellor.isReversing
         }
         self.wfile.write(json.dumps(payload).encode("utf-8"))
 
