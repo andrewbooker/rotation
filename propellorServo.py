@@ -117,6 +117,8 @@ class Propellor(Device):
             if not self.manual.is_set():
                 v = self.valueProvider.get()
                 if v != self.value:
+                    if random.random() > 0.7:
+                        self._toggleDirection()
                     self.set(v)
             time.sleep(0.05)
 
@@ -128,25 +130,23 @@ class Propellor(Device):
         self.manual.set()
         self.set(0)
 
-    def toggleDirection(self):
-        if not self.manual.is_set():
-            return
-        self.stop()
-        time.sleep(0.5)
+    def _toggleDirection(self):
+        self.set(0)
+        time.sleep(0.1)
         self.isReversing = not self.isReversing
         GPIO.output(Propellor.PIN_DIR, 1 if self.isReversing else 0)
-        time.sleep(0.5)
-        self.set(Propellor.MID)
+        time.sleep(0.1)
 
     def ahead(self):
         propellor.manual.set()
         if self.isReversing:
-            self.toggleDirection()
+            self._toggleDirection()
         propellor.set(Propellor.MID)
 
     def toggleForwardReverse(self):
         propellor.manual.set()
-        propellor.toggleDirection()
+        propellor._toggleDirection()
+        self.set(Propellor.MID)
 
 import sys
 def confVal(val):
