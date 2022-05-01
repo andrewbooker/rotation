@@ -78,28 +78,24 @@ class Servo(Device):
     def __init__(self):
         Device.__init__(self, "servo", 2)
         self.manual = threading.Event()
-        self.isReady = threading.Event()
-        self.isReady.set()
         self.valueProvider = RandomValueProvider(Servo.MIN, Servo.MAX, 5.13)
 
     def run(self):
-        while not self.manual.is_set() and self.isReady.is_set():
-            v = self.valueProvider.get()
-            if v != self.value:
-                self.set(v)
+        while True:
+            if not self.manual.is_set():
+                v = self.valueProvider.get()
+                if v != self.value:
+                    self.set(v)
             time.sleep(0.05)
 
-        self.set(Servo.MID)
-        time.sleep(1)
-        self.isReady.set()
+    def toRandom(self):
+        self.manual.clear()
 
     def toManual(self):
-        if self.manual.is_set() and self.isReady.is_set():
+        if self.manual.is_set():
             return
-        self.isReady.clear()
         self.manual.set()
-        while not self.isReady.is_set():
-            time.sleep(0.1)
+        self.set(Servo.MID)
 
 class Propellor(Device):
     MIN = 2.3
@@ -117,11 +113,16 @@ class Propellor(Device):
         self.valueProvider = RandomValueProvider(Propellor.MIN, Propellor.MAX, 2.37)
 
     def run(self):
-        while not self.manual.is_set():
-            v = self.valueProvider.get()
-            if v != self.value:
-                self.set(v)
+        while True:
+            if not self.manual.is_set():
+                v = self.valueProvider.get()
+                if v != self.value:
+                    self.set(v)
             time.sleep(0.05)
+
+    def toRandom(self):
+        self.ahead()
+        self.manual.clear()
 
     def stop(self):
         self.manual.set()
@@ -204,6 +205,10 @@ class Controller(BaseHTTPRequestHandler):
         servo.toManual()
         servo.set(Servo.MID)
         propellor.toggleForwardReverse()
+
+    def _random(self):
+        servo.toRandom()
+        propellor.toRandom()
 
     def do_POST(self):
         self.__standardResponse()
