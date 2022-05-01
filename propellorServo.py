@@ -72,8 +72,8 @@ import threading
 
 class Servo(Device):
     MIN = 2.3
-    MID = 5.6
-    MAX = 9.8
+    MAX = 9.3
+    MID = 0.5 * (MAX + MIN)
 
     def __init__(self):
         Device.__init__(self, "servo", 2)
@@ -103,8 +103,8 @@ class Servo(Device):
 
 class Propellor(Device):
     MIN = 2.3
-    MID = 5
     MAX = 8
+    MID = 0.5 * (MAX + MIN)
     PIN_DIR = 3
     PIN_SPEED = 4
 
@@ -144,7 +144,7 @@ class Propellor(Device):
         propellor.set(Propellor.MID)
 
     def toggleForwardReverse(self):
-        servo.toManual()
+        propellor.manual.set()
         propellor.toggleDirection()
 
 import sys
@@ -201,7 +201,8 @@ class Controller(BaseHTTPRequestHandler):
         propellor.ahead()
 
     def _toggleForwardReverse(self):
-        self._ahead()
+        servo.toManual()
+        servo.set(Servo.MID)
         propellor.toggleForwardReverse()
 
     def do_POST(self):
