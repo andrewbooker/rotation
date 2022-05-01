@@ -12,16 +12,31 @@ button {
 .indicator {
     height: 30px;
 }
+.buttons {
+	max-width: 50%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+.orientation {
+	display: flex;
+	flex-direction: row;
+}
 </style>
 </head>
 <body>
-<div>Speed: <span class="indicator" id="indicator-speed">0</span></div>
-<div>Direction: <span class="indicator" id="indicator-direction">0</span></div>
-<div><button id="button-random">Random</button></div>
-<div><button id="button-ahead">Ahead</button></div>
-<div><button id="button-left">Left</button> <button id="button-right">Right</button></div>
-<div><button id="button-stop">Stop</button></div>
-<div><button id="button-reverse">Reverse</button></div>
+	<div>Speed: <span class="indicator" id="indicator-speed">0</span></div>
+	<div>Direction: <span class="indicator" id="indicator-direction">0</span></div>
+	<div class="buttons">
+		<div><button id="button-random">Random</button></div>
+		<div><button id="button-ahead">Ahead</button></div>
+		<div class="orientation">
+			<button id="button-left">Left</button>
+			<button id="button-right">Right</button>
+		</div>
+		<div><button id="button-stop">Stop</button></div>
+		<div><button id="button-reverse">Reverse</button></div>
+	</div>
 <script>
 
 const g_server = "http://192.168.1.12/"
