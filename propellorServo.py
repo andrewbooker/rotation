@@ -76,7 +76,7 @@ class Servo(Device):
     MID = 0.5 * (MAX + MIN)
 
     def __init__(self):
-        Device.__init__(self, "servo", 2)
+        Device.__init__(self, "servo", 10)
         self.manual = threading.Event()
         self.valueProvider = RandomValueProvider(Servo.MIN, Servo.MAX, 5.13)
 
@@ -101,8 +101,8 @@ class Propellor(Device):
     MIN = 2.3
     MAX = 8
     MID = 0.5 * (MAX + MIN)
-    PIN_DIR = 3
-    PIN_SPEED = 4
+    PIN_DIR = 9
+    PIN_SPEED = 11
 
     def __init__(self):
         Device.__init__(self, "propellor", Propellor.PIN_SPEED)
