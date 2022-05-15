@@ -75,10 +75,10 @@ class Servo(Device):
     MAX = 9.3
     MID = 0.5 * (MAX + MIN)
 
-    def __init__(self):
+    def __init__(self, randomInterval):
         Device.__init__(self, "servo", 10)
         self.manual = threading.Event()
-        self.valueProvider = RandomValueProvider(Servo.MIN, Servo.MAX, 5.13)
+        self.valueProvider = RandomValueProvider(Servo.MIN, Servo.MAX, randomInterval)
 
     def run(self):
         while True:
@@ -114,13 +114,13 @@ class Propellor(Device):
     PIN_DIR = 9
     PIN_SPEED = 11
 
-    def __init__(self):
+    def __init__(self, randomInterval):
         Device.__init__(self, "propellor", Propellor.PIN_SPEED)
         self.isReversing = False
         self.manual = threading.Event()
         ports.newOutput(Propellor.PIN_DIR)
         GPIO.output(Propellor.PIN_DIR, 0)
-        self.valueProvider = RandomValueProvider(Propellor.MIN, Propellor.MAX, 2.37)
+        self.valueProvider = RandomValueProvider(Propellor.MIN, Propellor.MAX, randomInterval)
 
     def run(self):
         while True:
@@ -160,9 +160,9 @@ class Propellor(Device):
 
 import sys
 isPilot = int(sys.argv[1]) if len(sys.argv) > 1 else 0
-
-servo = Servo() if isPilot else InertServo()
-propellor = Propellor()
+randomInterval = float(sys.argv[2]) if len(sys.argv) > 2 else 8.37
+servo = Servo(randomInterval) if isPilot else InertServo()
+propellor = Propellor(randomInterval)
 
 PORT = 9977
 from http.server import HTTPServer, BaseHTTPRequestHandler
