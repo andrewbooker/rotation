@@ -108,8 +108,8 @@ class InertServo():
 		pass
 
 class Propellor(Device):
-    MIN = 2.3
-    MAX = 8
+    MIN = 3.6
+    MAX = 8.5
     MID = 0.5 * (MAX + MIN)
     PIN_DIR = 9
     PIN_SPEED = 11
