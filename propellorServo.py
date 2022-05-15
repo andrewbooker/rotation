@@ -97,6 +97,16 @@ class Servo(Device):
         self.manual.set()
         self.set(Servo.MID)
 
+class InertServo():
+	def __init__(self):
+		self.value = 0
+	def toRandom(self):
+		pass
+	def toManual(self):
+		pass
+	def set(self, ignore):
+		pass
+
 class Propellor(Device):
     MIN = 2.3
     MAX = 8
@@ -149,12 +159,9 @@ class Propellor(Device):
         self.set(Propellor.MID)
 
 import sys
-def confVal(val):
-    with open(sys.argv[1], "r") as cf:
-        js = json.load(cf)
-        return js[val]
+isPilot = int(sys.argv[1]) if len(sys.argv) > 1 else 0
 
-servo = Servo()
+servo = Servo() if isPilot else InertServo()
 propellor = Propellor()
 
 PORT = 9977
@@ -225,7 +232,7 @@ def startServer():
 threads = []
 threads.append(threading.Thread(target=startServer, args=(), daemon=True))
 threads.append(threading.Thread(target=propellor.run, args=(), daemon=True))
-if int(confVal("runServo")) == 1:
+if isPilot == 1:
     threads.append(threading.Thread(target=servo.run, args=(), daemon=True))
 
 [t.start() for t in threads]
