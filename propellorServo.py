@@ -109,8 +109,7 @@ class InertServo():
 
 class Propellor(Device):
     MIN = 3.6
-    MAX = 8.5
-    MID = 0.5 * (MAX + MIN)
+    MAX = 9
     PIN_DIR = 9
     PIN_SPEED = 11
 
@@ -151,12 +150,12 @@ class Propellor(Device):
         propellor.manual.set()
         if self.isReversing:
             self._toggleDirection()
-        propellor.set(Propellor.MID)
+        propellor.set(Propellor.MAX)
 
     def toggleForwardReverse(self):
         propellor.manual.set()
         propellor._toggleDirection()
-        self.set(Propellor.MID)
+        self.set(Propellor.MAX)
 
 import sys
 isPilot = int(sys.argv[1]) if len(sys.argv) > 1 else 0
