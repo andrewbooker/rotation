@@ -162,6 +162,9 @@ isPilot = int(sys.argv[1]) if len(sys.argv) > 1 else 0
 randomInterval = float(sys.argv[2]) if len(sys.argv) > 2 else 8.37
 servo = Servo(randomInterval) if isPilot else InertServo()
 propellor = Propellor(randomInterval)
+servo.manual.set()
+propellor.manual.set()
+
 
 PORT = 9977
 from http.server import HTTPServer, BaseHTTPRequestHandler
