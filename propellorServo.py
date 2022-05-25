@@ -109,8 +109,8 @@ class InertServo():
 		pass
 
 class Propellor(Device):
-    MIN = 3.6
-    MAX = 9
+    MIN = 5
+    MAX = 100
     PIN_DIR = 9
     PIN_SPEED = 11
 
@@ -121,6 +121,7 @@ class Propellor(Device):
         self.manual.set()
         ports.newOutput(Propellor.PIN_DIR)
         GPIO.output(Propellor.PIN_DIR, 0)
+        self.cruise = 0.5 * Propellor.MAX
         self.valueProvider = RandomValueProvider(Propellor.MIN, Propellor.MAX, randomInterval)
 
     def run(self):
@@ -141,6 +142,14 @@ class Propellor(Device):
         self.manual.set()
         self.set(0)
 
+    def incrCruise(self):
+        self.cruise = min(self.cruise + 5, Propellor.MAX)
+        propellor.set(self.cruise)
+
+    def decrCruise(self):
+        self.cruise = max(self.cruise - 5, Propellor.MIN)
+        propellor.set(self.cruise)
+
     def _toggleDirection(self):
         self.set(0)
         time.sleep(0.1)
@@ -152,12 +161,12 @@ class Propellor(Device):
         propellor.manual.set()
         if self.isReversing:
             self._toggleDirection()
-        propellor.set(Propellor.MAX)
+        propellor.set(self.cruise)
 
     def toggleForwardReverse(self):
         propellor.manual.set()
         propellor._toggleDirection()
-        self.set(Propellor.MAX)
+        self.set(self.cruise)
 
 import sys
 isPilot = int(sys.argv[1]) if len(sys.argv) > 1 else 0
@@ -209,6 +218,12 @@ class Controller(BaseHTTPRequestHandler):
         servo.toManual()
         servo.set(Servo.MID)
         propellor.ahead()
+
+    def _increase(self):
+        propellor.incrCruise()
+
+    def _decrease(self):
+        propellor.decrCruise()
 
     def _toggleForwardReverse(self):
         servo.toManual()
