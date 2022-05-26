@@ -61,6 +61,9 @@ class RandomValueProvider():
     def __resetTime(self):
         self.start = time.time() + self.interval
 
+    def setMax(self, v):
+        self.max = v
+
     def get(self):
         if time.time() > self.start:
             self.val = anythingBetween(self.min, self.max)
@@ -122,7 +125,7 @@ class Propellor(Device):
         ports.newOutput(Propellor.PIN_DIR)
         GPIO.output(Propellor.PIN_DIR, 0)
         self.cruise = 0.5 * Propellor.MAX
-        self.valueProvider = RandomValueProvider(Propellor.MIN, Propellor.MAX, randomInterval)
+        self.valueProvider = RandomValueProvider(Propellor.MIN, self.cruise, randomInterval)
 
     def run(self):
         while True:
@@ -144,11 +147,15 @@ class Propellor(Device):
 
     def incrCruise(self):
         self.cruise = min(self.cruise + 5, Propellor.MAX)
-        propellor.set(self.cruise)
+        if self.manual.is_set():
+            self.set(self.cruise)
+        self.valueProvider.setMax(self.cruise)
 
     def decrCruise(self):
         self.cruise = max(self.cruise - 5, Propellor.MIN)
-        propellor.set(self.cruise)
+        if self.manual.is_set():
+            self.set(self.cruise)
+        self.valueProvider.setMax(self.cruise)
 
     def _toggleDirection(self):
         self.set(0)
