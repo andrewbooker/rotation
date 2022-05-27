@@ -147,7 +147,7 @@ class Propellor(Device):
 
     def incrCruise(self):
         self.cruise = min(self.cruise + 5, Propellor.MAX)
-        if self.manual.is_set():
+        if self.manual.is_set() and self.value != 0:
             self.set(self.cruise)
         self.valueProvider.setMax(self.cruise)
 
