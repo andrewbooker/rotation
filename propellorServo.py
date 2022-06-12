@@ -101,15 +101,26 @@ class Servo(Device):
         self.manual.set()
         self.set(Servo.MID)
 
-class InertServo():
-	def __init__(self):
-		self.value = 0
-	def toRandom(self):
-		pass
-	def toManual(self):
-		pass
-	def set(self, ignore):
-		pass
+
+class StubPropellor():
+    def __init__(self):
+        self.value = 0
+        self.isReversing = False
+    def run(self):
+        pass
+    def toRandom(self):
+        pass
+    def stop(self):
+        pass
+    def incrCruise(self):
+        pass
+    def decrCruise(self):
+        pass
+    def ahead(self):
+        pass
+    def toggleForwardReverse(self):
+        pass
+
 
 class Propellor(Device):
     MIN = 5
@@ -177,8 +188,9 @@ class Propellor(Device):
 import sys
 isPilot = int(sys.argv[1]) if len(sys.argv) > 1 else 0
 randomInterval = float(sys.argv[2]) if len(sys.argv) > 2 else 8.37
-servo = Servo(randomInterval) if isPilot else InertServo()
-propellor = Propellor(randomInterval, 11, 9)
+propellorR = Propellor(randomInterval, 11, 9)
+propellorL = Propellor(randomInterval, 22, 27) if isPilot else StubPropellor()
+propellors = [propellorR, propellorL]
 
 
 PORT = 9977
@@ -201,44 +213,37 @@ class Controller(BaseHTTPRequestHandler):
         self.__standardResponse()
         self.end_headers()
         payload = {
-            "pos": servo.value,
-            "speed": propellor.value,
-            "isForward": not propellor.isReversing
+            "speedL": propellorL.value * (-1.0 if propellorL.isReversing else 1.0),
+            "speedR": propellorR.value * (-1.0 if propellorR.isReversing else 1.0),
+            "isForward": not propellorR.isReversing or not propellorL.isReversing
         }
         self.wfile.write(json.dumps(payload).encode("utf-8"))
 
     def _stop(self):
-        propellor.stop()
-        servo.toManual()
-        servo.set(Servo.MID)
+        [p.stop() for p in propellors]
 
     def _left(self):
-        servo.toManual()
-        servo.set(Servo.MIN)
+        propellorL.stop() # yes, this way round. to steer left, stop the left
+        propellorR.ahead()
 
     def _right(self):
-        servo.toManual()
-        servo.set(Servo.MAX)
+        propellorR.stop()
+        propellorL.ahead()
 
     def _ahead(self):
-        servo.toManual()
-        servo.set(Servo.MID)
-        propellor.ahead()
+        [p.ahead() for p in propellors]
 
     def _increase(self):
-        propellor.incrCruise()
+        [p.incrCruise() for p in propellors]
 
     def _decrease(self):
-        propellor.decrCruise()
+        [p.decrCruise() for p in propellors]
 
     def _toggleForwardReverse(self):
-        servo.toManual()
-        servo.set(Servo.MID)
-        propellor.toggleForwardReverse()
+        [p.toggleForwardReverse() for p in propellors]
 
     def _random(self):
-        servo.toRandom()
-        propellor.toRandom()
+        [p.toRandom() for p in propellors]
 
     def do_POST(self):
         self.__standardResponse()
@@ -254,9 +259,9 @@ def startServer():
 
 threads = []
 threads.append(threading.Thread(target=startServer, args=(), daemon=True))
-threads.append(threading.Thread(target=propellor.run, args=(), daemon=True))
+threads.append(threading.Thread(target=propellorR.run, args=(), daemon=True))
 if isPilot == 1:
-    threads.append(threading.Thread(target=servo.run, args=(), daemon=True))
+    threads.append(threading.Thread(target=propellorL.run, args=(), daemon=True))
 
 [t.start() for t in threads]
 print("serving on port", PORT)
