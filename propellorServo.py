@@ -114,16 +114,15 @@ class InertServo():
 class Propellor(Device):
     MIN = 5
     MAX = 100
-    PIN_DIR = 9
-    PIN_SPEED = 11
 
-    def __init__(self, randomInterval):
-        Device.__init__(self, "propellor", Propellor.PIN_SPEED)
+    def __init__(self, randomInterval, pinSpeed, pinDir):
+        Device.__init__(self, "propellor", pinSpeed)
+        self.pinDir = pinDir
         self.isReversing = False
         self.manual = threading.Event()
         self.manual.set()
-        ports.newOutput(Propellor.PIN_DIR)
-        GPIO.output(Propellor.PIN_DIR, 0)
+        ports.newOutput(pinDir)
+        GPIO.output(pinDir, 0)
         self.cruise = 0.5 * Propellor.MAX
         self.valueProvider = RandomValueProvider(Propellor.MIN, self.cruise, randomInterval)
 
@@ -161,7 +160,7 @@ class Propellor(Device):
         self.set(0)
         time.sleep(0.1)
         self.isReversing = not self.isReversing
-        GPIO.output(Propellor.PIN_DIR, 1 if self.isReversing else 0)
+        GPIO.output(self.pinDir, 1 if self.isReversing else 0)
         time.sleep(0.1)
 
     def ahead(self):
@@ -179,7 +178,7 @@ import sys
 isPilot = int(sys.argv[1]) if len(sys.argv) > 1 else 0
 randomInterval = float(sys.argv[2]) if len(sys.argv) > 2 else 8.37
 servo = Servo(randomInterval) if isPilot else InertServo()
-propellor = Propellor(randomInterval)
+propellor = Propellor(randomInterval, 11, 9)
 
 
 PORT = 9977
