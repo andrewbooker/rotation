@@ -175,14 +175,14 @@ class Propellor(Device):
         time.sleep(0.1)
 
     def ahead(self):
-        propellor.manual.set()
+        self.manual.set()
         if self.isReversing:
             self._toggleDirection()
-        propellor.set(self.cruise)
+        self.set(self.cruise)
 
     def toggleForwardReverse(self):
-        propellor.manual.set()
-        propellor._toggleDirection()
+        self.manual.set()
+        self._toggleDirection()
         self.set(self.cruise)
 
 import sys
