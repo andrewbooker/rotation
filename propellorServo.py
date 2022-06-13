@@ -134,7 +134,7 @@ class Propellor(Device):
         self.manual.set()
         ports.newOutput(pinDir)
         GPIO.output(pinDir, 0)
-        self.cruise = 0.5 * Propellor.MAX
+        self.cruise = 2 * Propellor.MIN
         self.valueProvider = RandomValueProvider(Propellor.MIN, self.cruise, randomInterval)
 
     def run(self):
@@ -142,7 +142,7 @@ class Propellor(Device):
             if not self.manual.is_set():
                 v = self.valueProvider.get()
                 if v != self.value:
-                    if random.random() > 0.7:
+                    if random.random() > 0.5:
                         self._toggleDirection()
                     self.set(v)
             time.sleep(0.05)
@@ -154,6 +154,7 @@ class Propellor(Device):
     def stop(self):
         self.manual.set()
         self.set(0)
+        time.sleep(0.1)
 
     def incrCruise(self):
         self.cruise = min(self.cruise + 5, Propellor.MAX)
@@ -240,7 +241,8 @@ class Controller(BaseHTTPRequestHandler):
         [p.decrCruise() for p in propellors]
 
     def _toggleForwardReverse(self):
-        [p.toggleForwardReverse() for p in propellors]
+        if (propellorL.isReversing and propellorR.isReversing) or (not propellorL.isReversing and not propellorR.isReversing):
+            [p.toggleForwardReverse() for p in propellors]
 
     def _random(self):
         [p.toRandom() for p in propellors]
