@@ -73,34 +73,6 @@ class RandomValueProvider():
 
 import threading
 
-class Servo(Device):
-    MIN = 2.3
-    MAX = 9.3
-    MID = 0.5 * (MAX + MIN)
-
-    def __init__(self, randomInterval):
-        Device.__init__(self, "servo", 10)
-        self.manual = threading.Event()
-        self.manual.set()
-        self.valueProvider = RandomValueProvider(Servo.MIN, Servo.MAX, randomInterval)
-
-    def run(self):
-        while True:
-            if not self.manual.is_set():
-                v = self.valueProvider.get()
-                if v != self.value:
-                    self.set(v)
-            time.sleep(0.05)
-
-    def toRandom(self):
-        self.manual.clear()
-
-    def toManual(self):
-        if self.manual.is_set():
-            return
-        self.manual.set()
-        self.set(Servo.MID)
-
 
 class StubPropellor():
     def __init__(self):
@@ -153,8 +125,11 @@ class Propellor(Device):
 
     def stop(self):
         self.manual.set()
-        self.set(0)
-        time.sleep(0.1)
+        if self.isReversing:
+            self._setDirection(false)
+        else:
+            self.set(0)
+            time.sleep(0.1)
 
     def incrCruise(self):
         self.cruise = min(self.cruise + 5, Propellor.MAX)
@@ -168,22 +143,23 @@ class Propellor(Device):
             self.set(self.cruise)
         self.valueProvider.setMax(self.cruise)
 
-    def _toggleDirection(self):
+    def _setDirection(self, isReversing):
         self.set(0)
         time.sleep(0.1)
-        self.isReversing = not self.isReversing
+        self.isReversing = isReversing
         GPIO.output(self.pinDir, 1 if self.isReversing else 0)
         time.sleep(0.1)
 
     def ahead(self):
         self.manual.set()
         if self.isReversing:
-            self._toggleDirection()
+            self._setDirection(false)
         self.set(self.cruise)
 
-    def toggleForwardReverse(self):
+    def reverse(self):
         self.manual.set()
-        self._toggleDirection()
+        if !self.isReversing:
+            self._setDirection(true)
         self.set(self.cruise)
 
 import sys
@@ -240,9 +216,9 @@ class Controller(BaseHTTPRequestHandler):
     def _decrease(self):
         [p.decrCruise() for p in propellors]
 
-    def _toggleForwardReverse(self):
-        if (propellorL.isReversing and propellorR.isReversing) or (not propellorL.isReversing and not propellorR.isReversing):
-            [p.toggleForwardReverse() for p in propellors]
+    def _reverse(self):
+        if not propellorL.isReversing or not propellorR.isReversing:
+            [p.reverse() for p in propellors]
 
     def _random(self):
         [p.toRandom() for p in propellors]
