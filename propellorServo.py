@@ -115,7 +115,7 @@ class Propellor(Device):
                 v = self.valueProvider.get()
                 if v != self.value:
                     if random.random() > 0.5:
-                        self._toggleDirection()
+                        self._setDirection(not self.isReversing)
                     self.set(v)
             time.sleep(0.05)
 
@@ -126,7 +126,7 @@ class Propellor(Device):
     def stop(self):
         self.manual.set()
         if self.isReversing:
-            self._setDirection(false)
+            self._setDirection(False)
         else:
             self.set(0)
             time.sleep(0.1)
@@ -144,6 +144,7 @@ class Propellor(Device):
         self.valueProvider.setMax(self.cruise)
 
     def _setDirection(self, isReversing):
+        print("setting direction to", "reverse" if isReversing else "forward")
         self.set(0)
         time.sleep(0.1)
         self.isReversing = isReversing
@@ -153,13 +154,13 @@ class Propellor(Device):
     def ahead(self):
         self.manual.set()
         if self.isReversing:
-            self._setDirection(false)
+            self._setDirection(False)
         self.set(self.cruise)
 
     def reverse(self):
         self.manual.set()
-        if !self.isReversing:
-            self._setDirection(true)
+        if not self.isReversing:
+            self._setDirection(True)
         self.set(self.cruise)
 
 import sys
