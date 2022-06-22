@@ -70,7 +70,6 @@ class RandomValueProvider():
             self.__resetTime()
         return self.val
 
-
 import threading
 
 
@@ -103,6 +102,7 @@ class Propellor(Device):
         self.pinDir = pinDir
         self.isReversing = False
         self.manual = threading.Event()
+        self.lock = threading.Lock()
         self.manual.set()
         ports.newOutput(pinDir)
         GPIO.output(pinDir, 0)
@@ -116,7 +116,7 @@ class Propellor(Device):
                 if v != self.value:
                     if random.random() > 0.5:
                         self._setDirection(not self.isReversing)
-                    self.set(v)
+                    self._setSpeedTo(v)
             time.sleep(0.05)
 
     def toRandom(self):
@@ -134,34 +134,41 @@ class Propellor(Device):
     def incrCruise(self):
         self.cruise = min(self.cruise + 5, Propellor.MAX)
         if self.manual.is_set() and self.value != 0:
-            self.set(self.cruise)
+            self._setSpeedTo(self.cruise)
         self.valueProvider.setMax(self.cruise)
 
     def decrCruise(self):
         self.cruise = max(self.cruise - 5, Propellor.MIN)
         if self.manual.is_set():
-            self.set(self.cruise)
+            self._setSpeedTo(self.cruise)
         self.valueProvider.setMax(self.cruise)
+
+    def _setSpeedTo(self, s):
+        self.lock.acquire()
+        self.set(s)
+        self.lock.release()
 
     def _setDirection(self, isReversing):
         print("setting direction to", "reverse" if isReversing else "forward")
+        self.lock.acquire()
         self.set(0)
         time.sleep(0.1)
         self.isReversing = isReversing
         GPIO.output(self.pinDir, 1 if self.isReversing else 0)
         time.sleep(0.1)
+        self.lock.release()
 
     def ahead(self):
         self.manual.set()
         if self.isReversing:
             self._setDirection(False)
-        self.set(self.cruise)
+        self._setSpeedTo(self.cruise)
 
     def reverse(self):
         self.manual.set()
         if not self.isReversing:
             self._setDirection(True)
-        self.set(self.cruise)
+        self._setSpeedTo(self.cruise)
 
 import sys
 isPilot = int(sys.argv[1]) if len(sys.argv) > 1 else 0
