@@ -173,9 +173,9 @@ class Propellor(Device):
 import sys
 isPilot = int(sys.argv[1]) if len(sys.argv) > 1 else 0
 randomInterval = float(sys.argv[2]) if len(sys.argv) > 2 else 8.37
-propellorR = Propellor(randomInterval, 11, 9)
-propellorL = Propellor(randomInterval, 22, 27) if isPilot else StubPropellor()
-propellors = [propellorR, propellorL]
+propSideways = Propellor(randomInterval, 11, 9)
+propFwdRev = Propellor(randomInterval, 22, 27) if isPilot else StubPropellor()
+propellors = [propSideways, propFwdRev]
 
 
 PORT = 9977
@@ -198,25 +198,30 @@ class Controller(BaseHTTPRequestHandler):
         self.__standardResponse()
         self.end_headers()
         payload = {
-            "speedL": propellorL.value * (-1.0 if propellorL.isReversing else 1.0),
-            "speedR": propellorR.value * (-1.0 if propellorR.isReversing else 1.0),
-            "isForward": not propellorR.isReversing or not propellorL.isReversing
+            "speedFwdRev": propFwdRev.value * (-1.0 if propFwdRev.isReversing else 1.0),
+            "speedSideways": propSideways.value * (-1.0 if propSideways.isReversing else 1.0),
+            "isForward": not propFwdRev.isReversing,
+            "isClockwise": not propSideways.isReversing
         }
         self.wfile.write(json.dumps(payload).encode("utf-8"))
 
     def _stop(self):
         [p.stop() for p in propellors]
 
-    def _left(self):
-        propellorL.stop() # yes, this way round. to steer left, stop the left
-        propellorR.ahead()
+    def _clockwise(self):
+        propSideways.ahead()
 
-    def _right(self):
-        propellorR.stop()
-        propellorL.ahead()
+    def _clockwiseStop(self):
+        propSideways.stop()
+
+    def _antiClockwise(self):
+        propSideways.reverse()
+
+    def _antiClockwiseStop(self):
+        propSideways.stop()
 
     def _ahead(self):
-        [p.ahead() for p in propellors]
+        propFwdRev.ahead()
 
     def _increase(self):
         [p.incrCruise() for p in propellors]
@@ -225,8 +230,8 @@ class Controller(BaseHTTPRequestHandler):
         [p.decrCruise() for p in propellors]
 
     def _reverse(self):
-        if not propellorL.isReversing or not propellorR.isReversing:
-            [p.reverse() for p in propellors]
+        if not propFwdRev.isReversing:
+            propFwdRev.reverse()
 
     def _random(self):
         [p.toRandom() for p in propellors]
@@ -245,9 +250,9 @@ def startServer():
 
 threads = []
 threads.append(threading.Thread(target=startServer, args=(), daemon=True))
-threads.append(threading.Thread(target=propellorR.run, args=(), daemon=True))
+threads.append(threading.Thread(target=propSideways.run, args=(), daemon=True))
 if isPilot == 1:
-    threads.append(threading.Thread(target=propellorL.run, args=(), daemon=True))
+    threads.append(threading.Thread(target=propFwdRev.run, args=(), daemon=True))
 
 [t.start() for t in threads]
 print("serving on port", PORT)
