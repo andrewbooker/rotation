@@ -48,6 +48,9 @@ class Device():
         print(self.desc, "%0.2f" % dc)
         self.pwm.ChangeDutyCycle(dc)
 
+    def isRunning(self):
+        return self.value > 0
+
 import time
 class RandomValueProvider():
     def __init__(self, min, max, interval):
@@ -91,6 +94,8 @@ class StubPropellor():
         pass
     def toggleForwardReverse(self):
         pass
+    def isRunning(self):
+        return False
 
 
 class Propellor(Device):
@@ -224,10 +229,14 @@ class Controller(BaseHTTPRequestHandler):
         propFwdRev.ahead()
 
     def _increase(self):
-        [p.incrCruise() for p in propellors]
+        for p in propellors:
+            if p.isRunning():
+                p.incrCruise()
 
     def _decrease(self):
-        [p.decrCruise() for p in propellors]
+        for p in propellors:
+            if p.isRunning():
+                p.decrCruise()
 
     def _reverse(self):
         if not propFwdRev.isReversing:
