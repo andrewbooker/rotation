@@ -243,7 +243,7 @@ class Controller(BaseHTTPRequestHandler):
             propFwdRev.reverse()
 
     def _random(self):
-        [p.toRandom() for p in propellors]
+        propSideways.toRandom()
 
     def do_POST(self):
         self.__standardResponse()
