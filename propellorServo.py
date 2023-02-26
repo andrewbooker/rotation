@@ -53,15 +53,16 @@ class Device():
 
 import time
 class RandomValueProvider():
-    def __init__(self, min, max, interval):
+    def __init__(self, min, max):
         self.min = min
         self.max = max
-        self.interval = interval
+        self.interval = 9.9
         self.val = min + ((max - min) / 2.0)
         self.start = 0
         self.__resetTime()
 
     def __resetTime(self):
+        self.interval = anythingBetween(3, 13)
         self.start = time.time() + self.interval
 
     def setMax(self, v):
@@ -102,7 +103,7 @@ class Propellor(Device):
     MIN = 5
     MAX = 100
 
-    def __init__(self, randomInterval, pinSpeed, pinDir):
+    def __init__(self, pinSpeed, pinDir):
         Device.__init__(self, "propellor", pinSpeed)
         self.pinDir = pinDir
         self.isReversing = False
@@ -112,7 +113,7 @@ class Propellor(Device):
         ports.newOutput(pinDir)
         GPIO.output(pinDir, 0)
         self.cruise = 2 * Propellor.MIN
-        self.valueProvider = RandomValueProvider(Propellor.MIN, self.cruise, randomInterval)
+        self.valueProvider = RandomValueProvider(Propellor.MIN, self.cruise)
 
     def run(self):
         while True:
@@ -132,9 +133,9 @@ class Propellor(Device):
         self.manual.set()
         if self.isReversing:
             self._setDirection(False)
-        else:
-            self.set(0)
-            time.sleep(0.1)
+
+        self.set(0)
+        time.sleep(0.1)
 
     def incrCruise(self):
         self.cruise = min(self.cruise + 5, Propellor.MAX)
@@ -177,9 +178,8 @@ class Propellor(Device):
 
 import sys
 isPilot = int(sys.argv[1]) if len(sys.argv) > 1 else 0
-randomInterval = float(sys.argv[2]) if len(sys.argv) > 2 else 8.37
-propSideways = Propellor(randomInterval, 11, 9)
-propFwdRev = Propellor(randomInterval, 22, 27) if isPilot else StubPropellor()
+propSideways = Propellor(11, 9)
+propFwdRev = Propellor(22, 27) if isPilot else StubPropellor()
 propellors = [propSideways, propFwdRev]
 
 
