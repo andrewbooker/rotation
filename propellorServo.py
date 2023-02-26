@@ -246,6 +246,9 @@ class Controller(BaseHTTPRequestHandler):
         if not propFwdRev.isReversing:
             propFwdRev.reverse()
 
+    def _reverseStop(self):
+        propFwdRev.stop()
+
     def _random(self):
         propSideways.toRandom()
 
