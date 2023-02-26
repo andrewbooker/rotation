@@ -229,6 +229,9 @@ class Controller(BaseHTTPRequestHandler):
         self._stop()
         propFwdRev.ahead()
 
+    def _aheadStop(self):
+        propFwdRev.stop()
+
     def _increase(self):
         for p in propellors:
             if p.isRunning():
