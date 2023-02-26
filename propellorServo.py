@@ -250,6 +250,7 @@ class Controller(BaseHTTPRequestHandler):
         propFwdRev.stop()
 
     def _random(self):
+        self._stop()
         propSideways.toRandom()
 
     def do_POST(self):
