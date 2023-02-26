@@ -226,6 +226,7 @@ class Controller(BaseHTTPRequestHandler):
         propSideways.stop()
 
     def _ahead(self):
+        self._stop()
         propFwdRev.ahead()
 
     def _increase(self):
