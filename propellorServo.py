@@ -100,7 +100,7 @@ class StubPropellor():
 
 
 class Propellor(Device):
-    MIN = 5
+    MIN = 10
     MAX = 100
 
     def __init__(self, pinSpeed, pinDir):
@@ -112,7 +112,7 @@ class Propellor(Device):
         self.manual.set()
         ports.newOutput(pinDir)
         GPIO.output(pinDir, 0)
-        self.cruise = 2 * Propellor.MIN
+        self.cruise = 0.67 * Propellor.MAX
         self.valueProvider = RandomValueProvider(Propellor.MIN, self.cruise)
 
     def run(self):
