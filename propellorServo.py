@@ -120,8 +120,7 @@ class Propellor(Device):
             if not self.manual.is_set():
                 v = self.valueProvider.get()
                 if v != self.value:
-                    if random.random() > 0.5:
-                        self._setDirection(not self.isReversing)
+                    self._setDirection(not self.isReversing)
                     self._setSpeedTo(v)
             time.sleep(0.05)
 
