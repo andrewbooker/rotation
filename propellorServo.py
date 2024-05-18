@@ -121,6 +121,7 @@ class Propellor(Device):
                 v = self.valueProvider.get()
                 if v != self.value:
                     self._setDirection(not self.isReversing)
+                    time.sleep(2.0)
                     self._setSpeedTo(v)
             time.sleep(0.05)
 
