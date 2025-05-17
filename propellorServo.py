@@ -2,10 +2,7 @@
 
 import RPi.GPIO as GPIO
 import random
-
-FREQ_HZ = 50
-
-
+import math
 
 class Ports():
     def __init__(self):
@@ -20,7 +17,7 @@ class Ports():
 
     def newPwm(self, channel, freq):
         GPIO.setup(channel, GPIO.OUT)
-        p = GPIO.PWM(channel, FREQ_HZ)
+        p = GPIO.PWM(channel, freq)
         self.ports.append(p)
         return p
 
@@ -33,10 +30,10 @@ def anythingBetween(mi, ma):
     return mi + ((ma - mi) * random.random())
 
 class Device():
-    def __init__(self, description, channel):
+    def __init__(self, description, channel, freq):
         self.desc = description
         print("starting", self.desc)
-        self.pwm = ports.newPwm(channel, FREQ_HZ)
+        self.pwm = ports.newPwm(channel, freq)
         self.pwm.start(0)
         self.value = 0
 
@@ -103,8 +100,8 @@ class Propellor(Device):
     MIN = 10
     MAX = 100
 
-    def __init__(self, pinSpeed, pinDir):
-        Device.__init__(self, "propellor", pinSpeed)
+    def __init__(self, pinSpeed, pinDir, freq):
+        Device.__init__(self, "propellor", pinSpeed, freq)
         self.pinDir = pinDir
         self.isReversing = False
         self.manual = threading.Event()
@@ -178,8 +175,10 @@ class Propellor(Device):
 
 import sys
 isPilot = int(sys.argv[1]) if len(sys.argv) > 1 else 0
-propSideways = Propellor(11, 9)
-propFwdRev = Propellor(22, 27) if isPilot else StubPropellor()
+note = int(sys.argv[2]) if len(sys.argv) > 2 else 57
+freq = math.pow(2, (n - 69)/12.0) * 220
+propSideways = Propellor(11, 9, freq)
+propFwdRev = Propellor(22, 27, freq) if isPilot else StubPropellor()
 propellors = [propSideways, propFwdRev]
 
 
